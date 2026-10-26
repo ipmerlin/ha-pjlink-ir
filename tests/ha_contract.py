@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntries, ConfigEntry  # noqa: E40
 from homeassistant.core import HomeAssistant  # noqa: E402
 from homeassistant.data_entry_flow import FlowResultType  # noqa: E402
 from custom_components.pjlink_ir.client import ConnectionUnavailable  # noqa: E402
+from custom_components.pjlink_ir.diagnostics import async_get_config_entry_diagnostics  # noqa: E402
 
 DATA = {
     "host": "192.0.2.20",
@@ -63,6 +64,16 @@ async def main(config_dir):
         assert hass.states.get(player_id).attributes["assumed_state"]
         assert len(hass.states.async_entity_ids("binary_sensor")) == 1
         print("PASS sleeping startup, media player and connectivity sensor")
+        diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+        assert diagnostics["summary"] == {
+            "registry_entities": 2,
+            "active_entities": 2,
+            "disabled_entities": 0,
+            "devices": 1,
+        }
+        assert diagnostics["findings"] == []
+        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 2
+        print("PASS read-only diagnostics: two entities linked to one device")
         hass.states.async_set("remote.contract", "on", {"supported_features": 1})
         send = AsyncMock()
         hass.services.async_register("remote", "send_command", send)
