@@ -11,12 +11,13 @@
 - Статическая проверка Python, порядка manifest, структуры переводов EN/RU и соответствия шагов UI.
 - Ruff: ошибок нет.
 - При упаковке каждый файл архива сравнивается побайтово с исходником, проверяется точный состав и CRC; рядом сохраняется SHA-256.
+- В [GitHub Actions](https://github.com/ipmerlin/ha-pjlink-ir/actions/runs/40352571696) прошли все четыре задания: offline, homeassistant, HACS и hassfest. На Linux полный pytest-набор Home Assistant: **10 passed**; прямой тест загрузки и обучения также прошёл.
 
 ## Ограничения
 
-- Полный pytest-набор `tests/ha` здесь не выполнен: стандартный `pytest-homeassistant-custom-component` импортирует Linux-модуль `fcntl`, отсутствующий в Windows. Прямой тест `tests/ha_contract.py` выполнен успешно и покрывает основные сценарии реального HA. Это не утверждение о прохождении всего pytest-набора.
-- HACS action и hassfest ещё не выполнены. Их Linux workflow подготовлен в `.github/workflows/checks.yml`; для запуска нужна публикация репозитория в GitHub. Локальная структура и manifest проверены отдельно.
-- Репозиторий и релиз в GitHub не публиковались; установка в действующий Home Assistant не выполнялась.
+- В Windows pytest-плагин не запускается из-за Linux-модуля `fcntl`; полный pytest-набор успешно выполнен в Linux CI. Прямой тест `tests/ha_contract.py` прошёл и в Windows, и в Linux.
+- HACS сообщает необязательное предупреждение об отсутствии `categories`. Стабильный hassfest отклоняет это новое поле, поэтому его пока нет в manifest. Проверки HACS и hassfest проходят; это не запуск без предупреждений. GitHub также сообщает о версии Node.js в используемых внешних actions.
+- Исходники опубликованы в [ipmerlin/ha-pjlink-ir](https://github.com/ipmerlin/ha-pjlink-ir). Установка в действующий Home Assistant не выполнялась.
 - На физическом Panasonic, Broadlink, Xiaomi IR и иных передатчиках тестов не было. Возможность обучения определяется функцией `LEARN_COMMAND`; работа произвольного передатчика зависит от реализации стандартных remote-сервисов его интеграцией.
 - Список сохранённых кодов не читается из приватных хранилищ передатчиков. Для готовой команды вводятся её имя/код и, при необходимости, имя устройства.
 - Недоступность сети не доказывает выключение проектора: без PJLink состояние питания отображается как неизвестное, действия включения доступны, диагностический датчик связи выключен.
@@ -31,6 +32,7 @@ python tests/ha_contract.py
 python -m pytest tests/ha -q
 ruff check custom_components tests scripts
 python scripts/package.py
+python scripts/verify_release.py
 ```
 
 Для `tests/ha_contract.py` нужен установленный Home Assistant, для pytest — также `pytest-homeassistant-custom-component`. Изолированная среда находится в исключённой из Git папке `.ha-venv`. Тесты не обращаются к домашней сети.
