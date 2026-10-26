@@ -27,6 +27,7 @@ class TCPTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.requests = []
         self.reply = b"%1POWR=1\r"
+        self.replies = {}
         self.greeting = b"PJLINK 0\r"
         self.handlers = set()
 
@@ -36,11 +37,14 @@ class TCPTests(unittest.IsolatedAsyncioTestCase):
             try:
                 writer.write(self.greeting)
                 await writer.drain()
-                self.requests.append(await reader.readuntil(b"\r"))
-                if self.reply is None:
+                request = await reader.readuntil(b"\r")
+                self.requests.append(request)
+                name = request.split(b"%1", 1)[1][:4].decode("ascii")
+                reply = self.replies.get(name, self.reply)
+                if reply is None:
                     await reader.read()
                 else:
-                    writer.write(self.reply)
+                    writer.write(reply)
                     await writer.drain()
             except (asyncio.IncompleteReadError, ConnectionError):
                 pass
@@ -62,6 +66,48 @@ class TCPTests(unittest.IsolatedAsyncioTestCase):
     async def test_plain_power(self):
         self.assertEqual(await self.client.power(), "1")
         self.assertEqual(self.requests, [b"%1POWR ?\r"])
+
+    async def test_identify_end_to_end(self):
+        self.replies = {
+            "POWR": b"%1POWR=1\r",
+            "NAME": b"%1NAME=Cinema\r",
+            "INF1": b"%1INF1=Panasonic\r",
+            "INF2": b"%1INF2=PT-Test\r",
+        }
+        self.assertEqual(
+            await self.client.identify(), {"name": "Cinema", "manufacturer": "Panasonic", "model": "PT-Test"}
+        )
+        self.assertEqual(self.requests, [b"%1POWR ?\r", b"%1NAME ?\r", b"%1INF1 ?\r", b"%1INF2 ?\r"])
+
+    async def test_authenticated_identify_end_to_end(self):
+        self.greeting = b"PJLINK 1 498e4a67\r"
+        self.client.password = "JBMIAProjectorLink"
+        self.replies = {
+            "POWR": b"%1POWR=0\r",
+            "NAME": b"%1NAME=Cinema\r",
+            "INF1": b"%1INF1=Panasonic\r",
+            "INF2": b"%1INF2=PT-Test\r",
+        }
+        self.assertEqual((await self.client.identify())["model"], "PT-Test")
+        digest = hashlib.md5(b"498e4a67JBMIAProjectorLink", usedforsecurity=False).hexdigest().encode()
+        self.assertEqual(
+            self.requests, [digest + f"%1{name} ?\r".encode() for name in ("POWR", "NAME", "INF1", "INF2")]
+        )
+
+    async def test_unsupported_identity_fields_end_to_end(self):
+        self.replies = {
+            "POWR": b"%1POWR=1\r",
+            "NAME": b"%1NAME=ERR1\r",
+            "INF1": b"%1INF1=Panasonic\r",
+            "INF2": b"%1INF2=ERR1\r",
+        }
+        self.assertEqual(await self.client.identify(), {"manufacturer": "Panasonic"})
+
+    async def test_invalid_command_names_rejected(self):
+        for name in ("INF1\rPOWR", "INF", "INF12", "inf1", "1NF1", "INF "):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                await self.client.command(name)
+        self.assertEqual(self.requests, [])
 
     async def test_authentication(self):
         self.greeting = b"PJLINK 1 498e4a67\r"

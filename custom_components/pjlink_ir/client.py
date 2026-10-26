@@ -34,7 +34,7 @@ class PJLinkClient:
 
     async def command(self, name: str, value: str = "?") -> str:
         """Send exactly once. A lost response is an unknown outcome."""
-        if not re.fullmatch(r"[A-Z]{4}", name) or not re.fullmatch(r"[?0-9]+", value):
+        if not re.fullmatch(r"[A-Z][A-Z0-9]{3}", name) or not re.fullmatch(r"[?0-9]+", value):
             raise ValueError("Invalid PJLink command")
         writer = None
         try:

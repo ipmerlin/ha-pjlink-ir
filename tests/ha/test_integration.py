@@ -108,6 +108,35 @@ async def test_flow_auth_failure(hass):
     assert result["errors"]["base"] == "invalid_auth"
 
 
+async def test_flow_identifies_model_over_real_tcp(hass, socket_enabled):
+    """Exercise config flow -> identify -> command validation -> actual TCP."""
+    received = []
+    values = {"POWR": "1", "NAME": "Cinema", "INF1": "Panasonic", "INF2": "PT-Test"}
+
+    async def handle(reader, writer):
+        try:
+            writer.write(b"PJLINK 0\r")
+            await writer.drain()
+            request = await reader.readuntil(b"\r")
+            received.append(request)
+            name = request[2:6].decode("ascii")
+            writer.write(f"%1{name}={values[name]}\r".encode())
+            await writer.drain()
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    async with await asyncio.start_server(handle, "127.0.0.1", 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data={"host": "127.0.0.1", "port": port}
+        )
+    assert result["step_id"] == "ir"
+    assert result["description_placeholders"] == {"manufacturer": "Panasonic", "model": "PT-Test"}
+    assert received == [b"%1POWR ?\r", b"%1NAME ?\r", b"%1INF1 ?\r", b"%1INF2 ?\r"]
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+
 async def test_learning_progress_then_explicit_confirmation(hass):
     with patch("custom_components.pjlink_ir.config_flow.PJLinkClient.identify", return_value={"model": "PT-Test"}):
         result = await hass.config_entries.flow.async_init(

@@ -19,7 +19,7 @@
 
 ## Установка из архива
 
-1. Скачайте `pjlink_ir-0.1.0.zip` со [страницы релиза](https://github.com/ipmerlin/ha-pjlink-ir/releases/tag/v0.1.0) и распакуйте в каталог конфигурации Home Assistant. Должен получиться путь `/config/custom_components/pjlink_ir/manifest.json`.
+1. Скачайте `pjlink_ir-0.1.1.zip` со [страницы релиза](https://github.com/ipmerlin/ha-pjlink-ir/releases/tag/v0.1.1) и распакуйте в каталог конфигурации Home Assistant. Должен получиться путь `/config/custom_components/pjlink_ir/manifest.json`.
 2. Перезапустите Home Assistant.
 3. Включите проектор штатным пультом. В «Настройки → Устройства и службы → Добавить интеграцию» найдите **PJLink with IR Wake**.
 4. Введите адрес проектора, порт (обычно 4352) и пароль PJLink. Производитель и модель читаются с проектора.

@@ -72,13 +72,28 @@ async def main(config_dir):
         assert send.await_count == 1
         assert hass.states.get(player_id).state == "on"
         print("PASS generic remote wake through actual media_player.turn_on service")
-        with patch(
-            "custom_components.pjlink_ir.config_flow.PJLinkClient.identify",
-            return_value={"manufacturer": "Panasonic", "model": "PT-Test"},
-        ):
+        received = []
+        values = {"POWR": "1", "NAME": "Cinema", "INF1": "Panasonic", "INF2": "PT-Test"}
+
+        async def projector(reader, writer):
+            try:
+                writer.write(b"PJLINK 0\r")
+                await writer.drain()
+                request = await reader.readuntil(b"\r")
+                received.append(request)
+                name = request[2:6].decode("ascii")
+                writer.write(f"%1{name}={values[name]}\r".encode())
+                await writer.drain()
+            finally:
+                writer.close()
+                await writer.wait_closed()
+
+        async with await asyncio.start_server(projector, "127.0.0.1", 0) as server:
+            port = server.sockets[0].getsockname()[1]
             flow = await hass.config_entries.flow.async_init(
-                "pjlink_ir", context={"source": "user"}, data={"host": "192.0.2.21", "port": 4352}
+                "pjlink_ir", context={"source": "user"}, data={"host": "127.0.0.1", "port": port}
             )
+        assert received == [b"%1POWR ?\r", b"%1NAME ?\r", b"%1INF1 ?\r", b"%1INF2 ?\r"]
         assert flow["step_id"] == "ir"
         assert flow["description_placeholders"]["model"] == "PT-Test"
         release = asyncio.Event()

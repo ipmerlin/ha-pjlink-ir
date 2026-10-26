@@ -1,14 +1,18 @@
 """Download published release assets and compare them to the intended package."""
 
 import hashlib
+import json
 from pathlib import Path
 import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "ipmerlin/ha-pjlink-ir"
-TAG = "v0.1.0"
-NAME = "pjlink_ir-0.1.0.zip"
+VERSION = json.loads((ROOT / "custom_components" / "pjlink_ir" / "manifest.json").read_text(encoding="utf-8"))[
+    "version"
+]
+TAG = f"v{VERSION}"
+NAME = f"pjlink_ir-{VERSION}.zip"
 
 
 def main():
