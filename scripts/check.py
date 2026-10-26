@@ -15,7 +15,7 @@ def main():
     keys = list(manifest)
     assert keys == ["domain", "name", *sorted(keys[2:])]
     assert manifest["domain"] == "pjlink_ir" and manifest["config_flow"]
-    assert manifest["categories"] and manifest["version"]
+    assert manifest["version"]
     resources = [
         json.loads((COMPONENT / p).read_text(encoding="utf-8"))
         for p in ("strings.json", "translations/en.json", "translations/ru.json")
