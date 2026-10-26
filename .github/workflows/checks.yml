@@ -1,0 +1,41 @@
+name: Checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: pip install probatio voluptuous
+      - run: python scripts/test_offline.py
+      - run: python scripts/test_offline.py --voluptuous
+      - run: python scripts/check.py
+      - run: python scripts/package.py
+      - run: pip install ruff
+      - run: ruff check custom_components tests scripts
+  homeassistant:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: pip install pytest-homeassistant-custom-component==0.13.373
+      - run: python -m pytest tests/ha -q
+      - run: python tests/ha_contract.py
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration

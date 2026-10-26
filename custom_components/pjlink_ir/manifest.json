@@ -1,0 +1,14 @@
+{
+  "domain": "pjlink_ir",
+  "name": "PJLink with IR Wake",
+  "categories": ["media_entertainment.tv_streaming"],
+  "codeowners": ["@ipmerlin"],
+  "config_flow": true,
+  "dependencies": ["remote"],
+  "documentation": "https://github.com/ipmerlin/ha-pjlink-ir",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ipmerlin/ha-pjlink-ir/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

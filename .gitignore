@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.test-deps/
+.ha-venv/
+.runtimes/
+.uv-cache/
+.uv-tool/
+.ha-check-*/
+.build/
+.pytest_cache/
+.ruff_cache/
+dist/

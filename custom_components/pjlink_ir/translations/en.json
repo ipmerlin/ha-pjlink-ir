@@ -1,0 +1,72 @@
+{
+  "title": "PJLink with IR Wake",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the projector",
+        "description": "Turn on the projector so its network interface is available. Manufacturer and model will be read automatically.",
+        "data": {
+          "host": "IP address or hostname",
+          "port": "PJLink port",
+          "password": "PJLink password"
+        }
+      },
+      "ir": {
+        "title": "Infrared power on",
+        "description": "Manufacturer: {manufacturer}. Model: {model}. Select a remote entity. Enter the existing command name/code, or choose learning. For Broadlink and Xiaomi IR, use a saved device name such as panasonic_projector. Other remotes may not need this field; leave it empty. Command names are managed by the transmitter integration.",
+        "data": {
+          "remote_entity_id": "IR transmitter",
+          "ir_device": "Saved device name (if required by the transmitter)",
+          "ir_command": "Power-on command name or code",
+          "command_setup": "Command setup",
+          "wake_timeout": "Wait for power confirmation (seconds)"
+        }
+      },
+      "learn_start": {
+        "title": "Prepare the original remote",
+        "description": "After pressing Submit, point the original remote at the IR transmitter and press Power On within 30 seconds. This stores a received IR code without transmitting it. Prefer a separate Power On button. A toggle button needs a physical test from standby. Learning the same device/command name may overwrite its existing code."
+      },
+      "learn_confirm": {
+        "title": "Check the learning result",
+        "description": "The learning request has finished. Some transmitter integrations only report a failure in notifications or logs. Check them and confirm the command was saved. Leave the box unchecked to learn again. The projector has not been switched on by this wizard.",
+        "data": {
+          "confirmed": "Command was saved"
+        }
+      },
+      "learn_failed": {
+        "title": "Learning failed",
+        "description": "Check that the selected transmitter is available and supports standard remote.learn_command. Press Submit to prepare another attempt. Close this dialog to cancel."
+      }
+    },
+    "progress": {
+      "learning": "Point the original remote at the selected transmitter and press Power On. Waiting for the IR code…"
+    },
+    "error": {
+      "cannot_connect": "Cannot read PJLink state. Turn on the projector and check the address, port and network.",
+      "invalid_auth": "Check the PJLink password.",
+      "invalid_host": "Enter an IP address or hostname without a URL or port.",
+      "remote_unavailable": "The transmitter is missing, off or unavailable.",
+      "cannot_learn": "The transmitter is unavailable or does not support standard command learning. Use a saved command instead.",
+      "empty_command": "Enter a power-on command name or code."
+    },
+    "abort": {
+      "already_configured": "This address and port are already configured.",
+      "reconfigure_successful": "IR settings updated."
+    }
+  },
+  "selector": {
+    "command_setup": {
+      "options": {
+        "saved": "Use saved command",
+        "learn": "Learn power on now"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connectivity": {
+        "name": "PJLink connection"
+      }
+    }
+  }
+}
