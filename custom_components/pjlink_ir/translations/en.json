@@ -54,6 +54,23 @@
       "reconfigure_successful": "IR settings updated."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Panasonic Daylight View",
+        "description": "Uses Panasonic command control on the same projector, independently of PJLink. Enable NETWORK CONTROL in the projector menu. The password is the web administrator password (PJLink password by default); username is usually admin1. An empty password is valid only for an unprotected command connection. Changes reload this integration without repeating IR learning.",
+        "data": {
+          "panasonic_enabled": "Enable Daylight View control",
+          "panasonic_port": "Panasonic command port",
+          "panasonic_username": "Web administrator username",
+          "panasonic_password": "Web administrator password"
+        }
+      }
+    },
+    "abort": {
+      "daylight_not_supported": "Daylight View control is currently supported for Panasonic FW300 models only."
+    }
+  },
   "selector": {
     "command_setup": {
       "options": {
@@ -63,6 +80,16 @@
     }
   },
   "entity": {
+    "select": {
+      "daylight_view": {
+        "name": "Daylight View",
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "on": "On"
+        }
+      }
+    },
     "binary_sensor": {
       "connectivity": {
         "name": "PJLink connection"

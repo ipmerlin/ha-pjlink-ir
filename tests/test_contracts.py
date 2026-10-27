@@ -37,6 +37,7 @@ def load_modules():
         "homeassistant.components",
         "homeassistant.components.remote",
         "homeassistant.config_entries",
+        "homeassistant.core",
         "homeassistant.const",
         "homeassistant.exceptions",
         "homeassistant.helpers",
@@ -45,6 +46,8 @@ def load_modules():
         modules[name] = ModuleType(name)
     modules["homeassistant.components.remote"].RemoteEntityFeature = Features
     modules["homeassistant.config_entries"].ConfigFlow = Flow
+    modules["homeassistant.config_entries"].OptionsFlow = Flow
+    modules["homeassistant.core"].callback = lambda func: func
     for name, value in {
         "CONF_HOST": "host",
         "CONF_PASSWORD": "password",

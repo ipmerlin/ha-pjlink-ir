@@ -43,6 +43,7 @@ async def test_diagnostics_reports_linked_entities_without_network_or_secrets(ha
         "sensor",
         "switch",
         "button",
+        "select",
     }
     assert report["source_sha256"]["media_player.py"]
     serialized = json.dumps(report)

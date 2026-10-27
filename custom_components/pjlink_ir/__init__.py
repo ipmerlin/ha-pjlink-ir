@@ -4,7 +4,7 @@ from homeassistant.const import Platform
 
 from .coordinator import ProjectorCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON, Platform.SELECT]
 
 
 async def async_setup_entry(hass, entry):
@@ -13,7 +13,12 @@ async def async_setup_entry(hass, entry):
     entry.runtime_data = coordinator
     await coordinator.async_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
+
+
+async def _async_options_updated(hass, entry):
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass, entry):

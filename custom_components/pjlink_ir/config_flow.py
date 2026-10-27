@@ -7,7 +7,8 @@ try:
 except ImportError:
     import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -23,12 +24,18 @@ from .const import (
     DOMAIN,
 )
 from .remote import async_remote_command, check_remote
+from .panasonic import supports_daylight
 
 
 class PJLinkIRConfigFlow(ConfigFlow, domain=DOMAIN):
     """Keep learned codes inside the remote integration's standard storage."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return PanasonicOptionsFlow()
 
     def __init__(self):
         self._settings = {}
@@ -165,10 +172,37 @@ class PJLinkIRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _finish(self):
         if self._reconfigure_entry is not None:
-            return self.async_update_reload_and_abort(self._reconfigure_entry, data_updates=self._settings)
+            self.hass.config_entries.async_update_entry(
+                self._reconfigure_entry, data={**self._reconfigure_entry.data, **self._settings}
+            )
+            return self.async_abort(reason="reconfigure_successful")
         title = (
             self._settings.get("name")
             or " ".join(filter(None, (self._settings.get("manufacturer"), self._settings.get("model"))))
             or self._settings[CONF_HOST]
         )
         return self.async_create_entry(title=title, data=self._settings)
+
+
+class PanasonicOptionsFlow(OptionsFlow):
+    """Independent LAN settings; do not repeat IR learning to change them."""
+
+    async def async_step_init(self, user_input=None):
+        if not supports_daylight(self.config_entry.data):
+            return self.async_abort(reason="daylight_not_supported")
+        if user_input is not None:
+            return self.async_create_entry(title="", data={**self.config_entry.options, **user_input})
+        settings = {**self.config_entry.data, **self.config_entry.options}
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema({
+                vol.Required("panasonic_enabled", default=settings.get("panasonic_enabled", True)): bool,
+                vol.Required("panasonic_port", default=settings.get("panasonic_port", 1024)): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=65535)
+                ),
+                vol.Required("panasonic_username", default=settings.get("panasonic_username", "admin1")): str,
+                vol.Optional("panasonic_password", default=settings.get(
+                    "panasonic_password", settings.get(CONF_PASSWORD, "")
+                )): selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)),
+            }),
+        )

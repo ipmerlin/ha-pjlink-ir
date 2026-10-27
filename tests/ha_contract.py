@@ -72,8 +72,8 @@ async def main(config_dir):
             "devices": 1,
         }
         assert diagnostics["findings"] == []
-        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 5
-        print("PASS read-only diagnostics: 14 entities linked to one device across five platforms")
+        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 6
+        print("PASS read-only diagnostics: 14 entities linked to one device across six platforms")
         hass.states.async_set("remote.contract", "on", {"supported_features": 1})
         send = AsyncMock()
         hass.services.async_register("remote", "send_command", send)
@@ -165,6 +165,57 @@ async def main(config_dir):
         await hass.async_block_till_done()
         assert hass.states.get(player_id).state == "unavailable"
         print("PASS unload lifecycle")
+        daylight_entry = ConfigEntry(
+            domain="pjlink_ir", title="Panasonic", data={**DATA, "model": "FW300NT"},
+            options={}, source="user", unique_id="daylight-test", version=1, minor_version=1,
+            discovery_keys={}, subentries_data=[],
+        )
+        mode = {"value": "auto"}
+
+        async def daylight(value=None):
+            if value is not None:
+                mode["value"] = value
+            return mode["value"]
+
+        replies = {"POWR": "1", "LAMP": "123 1", "ERST": "000000", "INPT": "31", "AVMT": "30", "INST": "11 31"}
+        with patch("custom_components.pjlink_ir.client.PJLinkClient.command", AsyncMock(
+            side_effect=lambda name, value="?": replies[name]
+        )), patch("custom_components.pjlink_ir.panasonic.PanasonicClient.daylight", AsyncMock(side_effect=daylight)) as lan:
+            await hass.config_entries.async_add(daylight_entry)
+            await hass.async_block_till_done()
+            select_id = "select.panasonic_daylight_view"
+            assert hass.states.get(select_id).state == "auto"
+            assert len(entity_registry.async_entries_for_config_entry(
+                entity_registry.async_get(hass), daylight_entry.entry_id
+            )) == 15
+            await hass.services.async_call("select", "select_option", {
+                "entity_id": select_id, "option": "on",
+            }, blocking=True)
+            await daylight_entry.runtime_data.async_refresh()
+            await hass.async_block_till_done()
+            assert hass.states.get(select_id).state == "on"
+            assert sum(call.args == ("on",) for call in lan.await_args_list) == 1
+            replies["POWR"] = "2"
+            lan.reset_mock()
+            await daylight_entry.runtime_data.async_refresh()
+            await hass.async_block_till_done()
+            assert hass.states.get(select_id).state == "unavailable"
+            lan.assert_not_awaited()
+            options = await hass.config_entries.options.async_init(daylight_entry.entry_id)
+            assert options["step_id"] == "init"
+            with patch.object(hass.config_entries, "async_reload", AsyncMock(return_value=True)) as reload:
+                options = await hass.config_entries.options.async_configure(options["flow_id"], {
+                    "panasonic_enabled": True, "panasonic_port": 1024,
+                    "panasonic_username": "admin1", "panasonic_password": "",
+                })
+                await hass.async_block_till_done()
+                reload.assert_awaited_once_with(daylight_entry.entry_id)
+            assert options["type"] is FlowResultType.CREATE_ENTRY
+            assert daylight_entry.data["ir_command"] == DATA["ir_command"]
+            assert await hass.config_entries.async_unload(daylight_entry.entry_id)
+            await hass.async_block_till_done()
+            assert hass.states.get(select_id).state == "unavailable"
+            print("PASS Daylight View select, readback, cooling, options reload and unload")
     finally:
         await hass.async_stop(force=True)
 

@@ -54,6 +54,23 @@
       "reconfigure_successful": "Настройки ИК обновлены."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Panasonic Daylight View",
+        "description": "Используется управление командами Panasonic на том же проекторе, отдельно от PJLink. Включите NETWORK CONTROL в меню проектора. Пароль — от веб-доступа администратора (по умолчанию пароль PJLink); имя пользователя обычно admin1. Пустой пароль подходит только для подключения без авторизации. Изменения перезагрузят интеграцию без повторного обучения ИК.",
+        "data": {
+          "panasonic_enabled": "Управлять Daylight View",
+          "panasonic_port": "Порт команд Panasonic",
+          "panasonic_username": "Имя администратора веб-интерфейса",
+          "panasonic_password": "Пароль администратора веб-интерфейса"
+        }
+      }
+    },
+    "abort": {
+      "daylight_not_supported": "Управление Daylight View сейчас поддерживается только для Panasonic FW300."
+    }
+  },
   "selector": {
     "command_setup": {
       "options": {
@@ -63,6 +80,16 @@
     }
   },
   "entity": {
+    "select": {
+      "daylight_view": {
+        "name": "Daylight View",
+        "state": {
+          "off": "Выключено",
+          "auto": "Авто",
+          "on": "Включено"
+        }
+      }
+    },
     "binary_sensor": {
       "connectivity": {
         "name": "Связь PJLink"

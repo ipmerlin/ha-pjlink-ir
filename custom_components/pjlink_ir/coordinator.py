@@ -12,6 +12,7 @@ from .client import CommandError, PJLinkClient, PJLinkError
 from .const import CONF_WAKE_TIMEOUT, DEFAULT_WAKE_TIMEOUT, DOMAIN
 from .remote import async_remote_command
 from .protocol import parse_errors, parse_lamps
+from .panasonic import PanasonicClient, supports_daylight
 from .wake import WakeController
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +30,25 @@ class ProjectorCoordinator(DataUpdateCoordinator):
             self.client, self._send_ir, self.settings.get(CONF_WAKE_TIMEOUT, DEFAULT_WAKE_TIMEOUT)
         )
         self.unsupported_commands = set()
+        self.panasonic = None
+        if supports_daylight(self.settings) and self.settings.get("panasonic_enabled", True):
+            self.panasonic = PanasonicClient(
+                self.settings[CONF_HOST], self.settings.get("panasonic_port", 1024),
+                self.settings.get("panasonic_username", "admin1"),
+                self.settings.get("panasonic_password", self.settings.get(CONF_PASSWORD, "")),
+            )
+
+    async def async_daylight(self, mode):
+        """Send once, then refresh actual state even if the response is lost."""
+        try:
+            async with self.wake.lock:
+                if self.panasonic is None or (self.data or {}).get("power") != "1":
+                    raise HomeAssistantError("Daylight View requires an online, projecting Panasonic")
+                await self.panasonic.daylight(mode)
+        except PJLinkError as err:
+            raise HomeAssistantError(str(err)) from err
+        finally:
+            await self.async_request_refresh()
 
     async def _send_ir(self):
         await async_remote_command(self.hass, self.settings)
@@ -72,12 +92,18 @@ class ProjectorCoordinator(DataUpdateCoordinator):
                 "lamps": None,
                 "errors": None,
                 "query_errors": {},
+                "daylight_view": None,
             }
             # Status queries only; they never send Power On, including in standby.
             await self._optional_query(data, "lamps", "LAMP", parse_lamps)
             await self._optional_query(data, "errors", "ERST", parse_errors)
             if power != "1":
                 return data
+            if self.panasonic is not None:
+                try:
+                    data["daylight_view"] = await self.panasonic.daylight()
+                except PJLinkError as err:
+                    data["query_errors"]["daylight_view"] = str(err)
             for field, command in (("source", "INPT"), ("muted", "AVMT"), ("inputs", "INST")):
                 try:
                     value = await self.client.command(command)

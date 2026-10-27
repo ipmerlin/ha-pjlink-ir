@@ -100,6 +100,25 @@ def make(ru=False):
                 "reconfigure_successful": t("IR settings updated.", "Настройки ИК обновлены."),
             },
         },
+        "options": {
+            "step": {"init": {
+                "title": t("Panasonic Daylight View", "Panasonic Daylight View"),
+                "description": t(
+                    "Uses Panasonic command control on the same projector, independently of PJLink. Enable NETWORK CONTROL in the projector menu. The password is the web administrator password (PJLink password by default); username is usually admin1. An empty password is valid only for an unprotected command connection. Changes reload this integration without repeating IR learning.",
+                    "Используется управление командами Panasonic на том же проекторе, отдельно от PJLink. Включите NETWORK CONTROL в меню проектора. Пароль — от веб-доступа администратора (по умолчанию пароль PJLink); имя пользователя обычно admin1. Пустой пароль подходит только для подключения без авторизации. Изменения перезагрузят интеграцию без повторного обучения ИК.",
+                ),
+                "data": {
+                    "panasonic_enabled": t("Enable Daylight View control", "Управлять Daylight View"),
+                    "panasonic_port": t("Panasonic command port", "Порт команд Panasonic"),
+                    "panasonic_username": t("Web administrator username", "Имя администратора веб-интерфейса"),
+                    "panasonic_password": t("Web administrator password", "Пароль администратора веб-интерфейса"),
+                },
+            }},
+            "abort": {"daylight_not_supported": t(
+                "Daylight View control is currently supported for Panasonic FW300 models only.",
+                "Управление Daylight View сейчас поддерживается только для Panasonic FW300.",
+            )},
+        },
         "selector": {
             "command_setup": {
                 "options": {
@@ -109,6 +128,10 @@ def make(ru=False):
             }
         },
         "entity": {
+            "select": {"daylight_view": {
+                "name": "Daylight View",
+                "state": {"off": t("Off", "Выключено"), "auto": t("Auto", "Авто"), "on": t("On", "Включено")},
+            }},
             "binary_sensor": {
                 "connectivity": {"name": t("PJLink connection", "Связь PJLink")},
                 "lamp_lit": {"name": t("Lamp lit", "Лампа включена")},
@@ -159,4 +182,4 @@ if __name__ == "__main__":
         ("translations/en.json", make()),
         ("translations/ru.json", make(True)),
     ):
-        (ROOT / name).write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        (ROOT / name).write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
