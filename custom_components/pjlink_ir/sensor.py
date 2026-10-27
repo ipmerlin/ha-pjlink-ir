@@ -1,16 +1,19 @@
 """Lamp operating time, actual power phase and PJLink error severities."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import callback
 
-from .entity import LampEntity, ProjectorDataEntity
+from .entity import LampEntity, PanasonicEntity, ProjectorDataEntity
+from .panasonic_features import SENSORS
 from .protocol import ERROR_FIELDS, ERROR_STATES, POWER_PHASES
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = entry.runtime_data
     async_add_entities([PowerPhase(coordinator), *[ErrorSeverity(coordinator, key) for key in ERROR_FIELDS]])
+    if coordinator.panasonic is not None:
+        async_add_entities([PanasonicSensor(coordinator, key) for key in SENSORS])
     added = set()
 
     @callback
@@ -74,3 +77,25 @@ class ErrorSeverity(ProjectorDataEntity, SensorEntity):
     @property
     def native_value(self):
         return ((self.coordinator.data or {}).get("errors") or {}).get(self.key)
+
+
+class PanasonicSensor(PanasonicEntity, SensorEntity):
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:air-filter"
+
+    def __init__(self, coordinator, key):
+        super().__init__(coordinator, key)
+        if key.endswith("temperature"):
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_icon = "mdi:thermometer"
+        elif key != "filter_rewinds":
+            self._attr_device_class = SensorDeviceClass.DURATION
+            self._attr_native_unit_of_measurement = UnitOfTime.HOURS
+            if key == "filter_hours":
+                self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    @property
+    def native_value(self):
+        return self.value

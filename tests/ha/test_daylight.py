@@ -34,6 +34,8 @@ async def daylight(hass):
     panasonic = AsyncMock(side_effect=mode)
     with patch("custom_components.pjlink_ir.client.PJLinkClient.command", command), patch(
         "custom_components.pjlink_ir.panasonic.PanasonicClient.daylight", panasonic
+    ), patch(
+        "custom_components.pjlink_ir.panasonic.PanasonicClient.read", AsyncMock(return_value=None)
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -47,7 +49,7 @@ async def test_select_modes_readback_and_diagnostics(hass, daylight):
     state = hass.states.get("select.cinema_daylight_view")
     assert state.state == "auto"
     assert state.attributes["options"] == ["off", "auto", "on"]
-    assert len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == 15
+    assert len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == 31
     panasonic.reset_mock()
     for mode in ("on", "off", "auto"):
         await hass.services.async_call("select", "select_option", {

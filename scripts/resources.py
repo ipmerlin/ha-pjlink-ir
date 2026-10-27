@@ -102,21 +102,21 @@ def make(ru=False):
         },
         "options": {
             "step": {"init": {
-                "title": t("Panasonic Daylight View", "Panasonic Daylight View"),
+                "title": t("Panasonic controls", "Управление Panasonic"),
                 "description": t(
                     "Uses Panasonic command control on the same projector, independently of PJLink. Enable NETWORK CONTROL in the projector menu. The password is the web administrator password (PJLink password by default); username is usually admin1. An empty password is valid only for an unprotected command connection. Changes reload this integration without repeating IR learning.",
                     "Используется управление командами Panasonic на том же проекторе, отдельно от PJLink. Включите NETWORK CONTROL в меню проектора. Пароль — от веб-доступа администратора (по умолчанию пароль PJLink); имя пользователя обычно admin1. Пустой пароль подходит только для подключения без авторизации. Изменения перезагрузят интеграцию без повторного обучения ИК.",
                 ),
                 "data": {
-                    "panasonic_enabled": t("Enable Daylight View control", "Управлять Daylight View"),
+                    "panasonic_enabled": t("Enable additional Panasonic controls", "Дополнительное управление Panasonic"),
                     "panasonic_port": t("Panasonic command port", "Порт команд Panasonic"),
                     "panasonic_username": t("Web administrator username", "Имя администратора веб-интерфейса"),
                     "panasonic_password": t("Web administrator password", "Пароль администратора веб-интерфейса"),
                 },
             }},
             "abort": {"daylight_not_supported": t(
-                "Daylight View control is currently supported for Panasonic FW300 models only.",
-                "Управление Daylight View сейчас поддерживается только для Panasonic FW300.",
+                "Additional Panasonic controls are currently supported for FW300 models only.",
+                "Дополнительное управление Panasonic сейчас поддерживается только для FW300.",
             )},
         },
         "selector": {
@@ -131,7 +131,27 @@ def make(ru=False):
             "select": {"daylight_view": {
                 "name": "Daylight View",
                 "state": {"off": t("Off", "Выключено"), "auto": t("Auto", "Авто"), "on": t("On", "Включено")},
+            }, "picture_mode": {
+                "name": t("Picture mode", "Режим изображения"),
+                "state": {key: t(en, russian) for key, en, russian in (
+                    ("dynamic", "Dynamic", "Динамический"), ("standard", "Standard", "Стандартный"),
+                    ("natural", "Natural", "Натуральный"), ("cinema", "Cinema", "Кино"),
+                    ("blackboard", "Blackboard", "Школьная доска"),
+                )},
+            }, "color_temperature": {
+                "name": t("Color temperature", "Цветовая температура"),
+                "state": {"low": t("Low", "Низкая"), "default": t("Default", "Стандартная"), "high": t("High", "Высокая")},
+            }, "aspect": {
+                "name": t("Aspect ratio", "Формат изображения"),
+                "state": {"auto": t("Auto", "Авто"), "4_3": "4:3", "16_9": "16:9",
+                          "h_fit": t("Fit width", "По ширине"), "v_fit": t("Fit height", "По высоте"),
+                          "hv_fit": t("Fill screen", "Заполнить экран"), "through": t("Through", "Без масштабирования")},
             }},
+            "number": {
+                "volume": {"name": t("Volume", "Громкость")},
+                "brightness": {"name": t("Brightness", "Яркость")},
+                "contrast": {"name": t("Contrast", "Контраст")},
+            },
             "binary_sensor": {
                 "connectivity": {"name": t("PJLink connection", "Связь PJLink")},
                 "lamp_lit": {"name": t("Lamp lit", "Лампа включена")},
@@ -139,6 +159,14 @@ def make(ru=False):
                 "problem": {"name": t("Problem", "Неисправность")},
             },
             "sensor": {
+                **{key: {"name": t(en, russian)} for key, en, russian in (
+                    ("intake_temperature", "Intake air temperature", "Температура входящего воздуха"),
+                    ("exhaust_temperature", "Exhaust air temperature", "Температура выходящего воздуха"),
+                    ("filter_hours", "Filter operating time", "Наработка фильтра"),
+                    ("filter_rewinds", "Filter rewinds", "Перемотки фильтра"),
+                    ("filter_since_rewind", "Time since filter rewind", "Время после перемотки фильтра"),
+                    ("filter_remaining", "Estimated filter time remaining", "Расчётный остаток фильтра"),
+                )},
                 "lamp_hours": {"name": t("Lamp operating time", "Наработка лампы")},
                 "additional_lamp_hours": {"name": t("Lamp {number} operating time", "Наработка лампы {number}")},
                 "power_phase": {
@@ -169,8 +197,13 @@ def make(ru=False):
                     )
                 },
             },
-            "switch": {"av_mute": {"name": t("AV mute", "AV Mute")}},
-            "button": {"refresh": {"name": t("Refresh status", "Обновить данные")}},
+            "switch": {"av_mute": {"name": t("AV mute", "AV Mute")}, "freeze": {"name": t("Freeze", "Стоп-кадр")}},
+            "button": {
+                "refresh": {"name": t("Refresh status", "Обновить данные")},
+                "auto_setup": {"name": t("Auto setup", "Автонастройка изображения")},
+                "zoom_in": {"name": t("Digital zoom in", "Увеличить изображение")},
+                "zoom_out": {"name": t("Digital zoom out", "Уменьшить изображение")},
+            },
         },
     }
 

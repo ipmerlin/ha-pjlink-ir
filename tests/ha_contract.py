@@ -72,8 +72,8 @@ async def main(config_dir):
             "devices": 1,
         }
         assert diagnostics["findings"] == []
-        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 6
-        print("PASS read-only diagnostics: 14 entities linked to one device across six platforms")
+        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 7
+        print("PASS read-only diagnostics: 14 entities linked to one device across seven platforms")
         hass.states.async_set("remote.contract", "on", {"supported_features": 1})
         send = AsyncMock()
         hass.services.async_register("remote", "send_command", send)
@@ -178,16 +178,45 @@ async def main(config_dir):
             return mode["value"]
 
         replies = {"POWR": "1", "LAMP": "123 1", "ERST": "000000", "INPT": "31", "AVMT": "30", "INST": "11 31"}
+        feature_values = {
+            "intake_temperature": 20, "exhaust_temperature": 40,
+            "filter_hours": 142, "filter_rewinds": 2, "filter_since_rewind": 20, "filter_remaining": 1500,
+            "volume": 30, "brightness": -1, "contrast": 32,
+            "picture_mode": "cinema", "color_temperature": "default", "aspect": "16_9", "freeze": False,
+        }
+
+        async def control(key, value=None):
+            if key in feature_values:
+                feature_values[key] = int(value) if key in ("volume", "brightness", "contrast") else value
+
         with patch("custom_components.pjlink_ir.client.PJLinkClient.command", AsyncMock(
             side_effect=lambda name, value="?": replies[name]
-        )), patch("custom_components.pjlink_ir.panasonic.PanasonicClient.daylight", AsyncMock(side_effect=daylight)) as lan:
+        )), patch("custom_components.pjlink_ir.panasonic.PanasonicClient.daylight", AsyncMock(side_effect=daylight)) as lan, patch(
+            "custom_components.pjlink_ir.panasonic.PanasonicClient.read", AsyncMock(side_effect=lambda key: feature_values[key])
+        ), patch(
+            "custom_components.pjlink_ir.panasonic.PanasonicClient.control", AsyncMock(side_effect=control)
+        ):
             await hass.config_entries.async_add(daylight_entry)
             await hass.async_block_till_done()
             select_id = "select.panasonic_daylight_view"
             assert hass.states.get(select_id).state == "auto"
             assert len(entity_registry.async_entries_for_config_entry(
                 entity_registry.async_get(hass), daylight_entry.entry_id
-            )) == 15
+            )) == 31
+            assert hass.states.get("sensor.panasonic_intake_air_temperature").state == "20"
+            assert hass.states.get("sensor.panasonic_estimated_filter_time_remaining").state == "1500"
+            for domain, service, name, data, expected in (
+                ("number", "set_value", "volume", {"value": 63}, "63"),
+                ("select", "select_option", "picture_mode", {"option": "dynamic"}, "dynamic"),
+                ("switch", "turn_on", "freeze", {}, "on"),
+            ):
+                entity_id = f"{domain}.panasonic_{name}"
+                await hass.services.async_call(domain, service, {"entity_id": entity_id, **data}, blocking=True)
+                await daylight_entry.runtime_data.async_refresh()
+                await hass.async_block_till_done()
+                assert hass.states.get(entity_id).state == expected
+            await hass.services.async_call("button", "press", {"entity_id": "button.panasonic_auto_setup"}, blocking=True)
+            print("PASS Panasonic temperatures, filter, number/select/switch/button service readback")
             await hass.services.async_call("select", "select_option", {
                 "entity_id": select_id, "option": "on",
             }, blocking=True)

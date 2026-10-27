@@ -47,3 +47,21 @@ class LampEntity(ProjectorDataEntity):
     def lamp(self):
         lamps = (self.coordinator.data or {}).get("lamps") or []
         return lamps[self.index] if self.index < len(lamps) else None
+
+
+class PanasonicEntity(ProjectorEntity):
+    """Only actual, current Panasonic values make a control available."""
+
+    def __init__(self, coordinator, key):
+        super().__init__(coordinator)
+        self.key = key
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_panasonic_{key}"
+        self._attr_translation_key = key
+
+    @property
+    def value(self):
+        return (self.coordinator.data or {}).get("panasonic", {}).get(self.key)
+
+    @property
+    def available(self):
+        return super().available and (self.coordinator.data or {}).get("power") == "1" and self.value is not None

@@ -57,10 +57,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Panasonic Daylight View",
+        "title": "Panasonic controls",
         "description": "Uses Panasonic command control on the same projector, independently of PJLink. Enable NETWORK CONTROL in the projector menu. The password is the web administrator password (PJLink password by default); username is usually admin1. An empty password is valid only for an unprotected command connection. Changes reload this integration without repeating IR learning.",
         "data": {
-          "panasonic_enabled": "Enable Daylight View control",
+          "panasonic_enabled": "Enable additional Panasonic controls",
           "panasonic_port": "Panasonic command port",
           "panasonic_username": "Web administrator username",
           "panasonic_password": "Web administrator password"
@@ -68,7 +68,7 @@
       }
     },
     "abort": {
-      "daylight_not_supported": "Daylight View control is currently supported for Panasonic FW300 models only."
+      "daylight_not_supported": "Additional Panasonic controls are currently supported for FW300 models only."
     }
   },
   "selector": {
@@ -88,6 +88,47 @@
           "auto": "Auto",
           "on": "On"
         }
+      },
+      "picture_mode": {
+        "name": "Picture mode",
+        "state": {
+          "dynamic": "Dynamic",
+          "standard": "Standard",
+          "natural": "Natural",
+          "cinema": "Cinema",
+          "blackboard": "Blackboard"
+        }
+      },
+      "color_temperature": {
+        "name": "Color temperature",
+        "state": {
+          "low": "Low",
+          "default": "Default",
+          "high": "High"
+        }
+      },
+      "aspect": {
+        "name": "Aspect ratio",
+        "state": {
+          "auto": "Auto",
+          "4_3": "4:3",
+          "16_9": "16:9",
+          "h_fit": "Fit width",
+          "v_fit": "Fit height",
+          "hv_fit": "Fill screen",
+          "through": "Through"
+        }
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      },
+      "brightness": {
+        "name": "Brightness"
+      },
+      "contrast": {
+        "name": "Contrast"
       }
     },
     "binary_sensor": {
@@ -105,6 +146,24 @@
       }
     },
     "sensor": {
+      "intake_temperature": {
+        "name": "Intake air temperature"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust air temperature"
+      },
+      "filter_hours": {
+        "name": "Filter operating time"
+      },
+      "filter_rewinds": {
+        "name": "Filter rewinds"
+      },
+      "filter_since_rewind": {
+        "name": "Time since filter rewind"
+      },
+      "filter_remaining": {
+        "name": "Estimated filter time remaining"
+      },
       "lamp_hours": {
         "name": "Lamp operating time"
       },
@@ -172,11 +231,23 @@
     "switch": {
       "av_mute": {
         "name": "AV mute"
+      },
+      "freeze": {
+        "name": "Freeze"
       }
     },
     "button": {
       "refresh": {
         "name": "Refresh status"
+      },
+      "auto_setup": {
+        "name": "Auto setup"
+      },
+      "zoom_in": {
+        "name": "Digital zoom in"
+      },
+      "zoom_out": {
+        "name": "Digital zoom out"
       }
     }
   }

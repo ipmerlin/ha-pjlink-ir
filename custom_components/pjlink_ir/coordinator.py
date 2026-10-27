@@ -1,6 +1,7 @@
 """Poll real PJLink state while leaving IR wake callable during sleep."""
 
 from datetime import timedelta
+import asyncio
 import logging
 import re
 
@@ -8,14 +9,16 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .client import CommandError, PJLinkClient, PJLinkError
+from .client import AuthenticationError, CommandError, PJLinkClient, PJLinkError
 from .const import CONF_WAKE_TIMEOUT, DEFAULT_WAKE_TIMEOUT, DOMAIN
 from .remote import async_remote_command
 from .protocol import parse_errors, parse_lamps
-from .panasonic import PanasonicClient, supports_daylight
+from .panasonic import PanasonicClient, PanasonicConnectionError, supports_daylight
+from .panasonic_features import QUERIES
 from .wake import WakeController
 
 _LOGGER = logging.getLogger(__name__)
+PANASONIC_POLL_TIMEOUT = 20
 
 
 class ProjectorCoordinator(DataUpdateCoordinator):
@@ -49,6 +52,35 @@ class ProjectorCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError(str(err)) from err
         finally:
             await self.async_request_refresh()
+
+    async def async_panasonic_control(self, key, value=None):
+        try:
+            async with self.wake.lock:
+                if self.panasonic is None or (self.data or {}).get("power") != "1":
+                    raise HomeAssistantError("Panasonic control requires an online, projecting device")
+                await self.panasonic.control(key, value)
+        except (PJLinkError, ValueError) as err:
+            raise HomeAssistantError(str(err)) from err
+        finally:
+            await self.async_request_refresh()
+
+    async def _update_panasonic(self, data):
+        """Optional failures stay local; bound the complete Panasonic polling cycle."""
+        try:
+            async with asyncio.timeout(PANASONIC_POLL_TIMEOUT):
+                for key in ("daylight_view", *QUERIES):
+                    try:
+                        if key == "daylight_view":
+                            data[key] = await self.panasonic.daylight()
+                        else:
+                            data["panasonic"][key] = await self.panasonic.read(key)
+                    except (PanasonicConnectionError, AuthenticationError) as err:
+                        data["query_errors"][key] = str(err)
+                        return
+                    except PJLinkError as err:
+                        data["query_errors"][key] = str(err)
+        except TimeoutError:
+            data["query_errors"]["panasonic_poll"] = "Panasonic polling time budget exceeded"
 
     async def _send_ir(self):
         await async_remote_command(self.hass, self.settings)
@@ -93,17 +125,13 @@ class ProjectorCoordinator(DataUpdateCoordinator):
                 "errors": None,
                 "query_errors": {},
                 "daylight_view": None,
+                "panasonic": {},
             }
             # Status queries only; they never send Power On, including in standby.
             await self._optional_query(data, "lamps", "LAMP", parse_lamps)
             await self._optional_query(data, "errors", "ERST", parse_errors)
             if power != "1":
                 return data
-            if self.panasonic is not None:
-                try:
-                    data["daylight_view"] = await self.panasonic.daylight()
-                except PJLinkError as err:
-                    data["query_errors"]["daylight_view"] = str(err)
             for field, command in (("source", "INPT"), ("muted", "AVMT"), ("inputs", "INST")):
                 try:
                     value = await self.client.command(command)
@@ -123,4 +151,6 @@ class ProjectorCoordinator(DataUpdateCoordinator):
                         data["video_muted"] = value in ("11", "31")
                 except (CommandError, PJLinkError) as err:
                     data["error"] = str(err)
+            if self.panasonic is not None:
+                await self._update_panasonic(data)
             return data

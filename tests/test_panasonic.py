@@ -123,6 +123,51 @@ class PanasonicTCPTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(module.PJLinkError):
             await self.client.daylight("on")
 
+    async def test_additional_queries_on_real_tcp(self):
+        samples = {
+            "intake_temperature": ("0020/0068", 20), "exhaust_temperature": ("0040/0104", 40),
+            "filter_hours": ("0142", 142), "filter_rewinds": ("0002", 2),
+            "filter_since_rewind": ("0020", 20), "filter_remaining": ("1500", 1500),
+            "volume": ("030", 30), "brightness": ("-01", -1), "contrast": ("032", 32),
+            "picture_mode": ("CIN", "cinema"), "color_temperature": ("1", "default"),
+            "aspect": ("2", "16_9"), "freeze": ("0", False),
+        }
+        for key, (response, expected) in samples.items():
+            self.reply = f"00{response}\r".encode()
+            self.assertEqual(await self.client.read(key), expected)
+            self.assertEqual(self.requests[-1], f"00{module.QUERIES[key]}\r".encode())
+
+    async def test_controls_acknowledged_once(self):
+        for key, value, command in (
+            ("volume", 63, "AVL:063"), ("brightness", -32, "VBR:-32"),
+            ("picture_mode", "cinema", "VPM:CIN"), ("freeze", True, "OFZ:1"),
+            ("auto_setup", None, "OAS"), ("zoom_in", None, "DZU"),
+        ):
+            self.reply = f"00{command}\r".encode()
+            await self.client.control(key, value)
+            self.assertEqual(self.requests[-1], f"00{command}\r".encode())
+        self.assertEqual(len(self.requests), 6)
+
+    async def test_control_lost_response_not_repeated(self):
+        self.reply = None
+        with self.assertRaises(module.PanasonicConnectionError):
+            await self.client.control("zoom_in")
+        self.assertEqual(self.requests, [b"00DZU\r"])
+
+    async def test_query_rejection_identifies_exact_command(self):
+        self.reply = b"00ER401\r"
+        with self.assertRaises(module.PanasonicCommandError) as error:
+            await self.client.read("intake_temperature")
+        self.assertEqual(error.exception.command, "QTM:0")
+        self.assertEqual(error.exception.code, "ER401")
+        self.assertIn("QTM:0", str(error.exception))
+
+    async def test_invalid_control_never_opens_connection(self):
+        for key, value in (("volume", 64), ("picture_mode", "cinema\rPON"), ("PON", None)):
+            with self.assertRaises(ValueError):
+                await self.client.control(key, value)
+        self.assertEqual(self.requests, [])
+
     async def test_invalid_mode_before_connection(self):
         with self.assertRaises(ValueError):
             await self.client.daylight("on\rPON")

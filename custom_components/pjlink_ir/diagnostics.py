@@ -31,6 +31,8 @@ def _source_files():
         "protocol.py",
         "panasonic.py",
         "select.py",
+        "number.py",
+        "panasonic_features.py",
         "manifest.json",
     )
     result = {}
@@ -130,12 +132,13 @@ async def async_get_config_entry_diagnostics(hass, entry):
                     "errors",
                     "query_errors",
                     "daylight_view",
+                    "panasonic",
                 )
             },
         },
         "loaded_modules": {
             name: f"custom_components.{DOMAIN}.{name}" in sys.modules
-            for name in ("media_player", "binary_sensor", "sensor", "switch", "button", "select", "coordinator", "client", "panasonic")
+            for name in ("media_player", "binary_sensor", "sensor", "switch", "button", "select", "number", "coordinator", "client", "panasonic")
         },
         "source_sha256": await hass.async_add_executor_job(_source_files),
     }

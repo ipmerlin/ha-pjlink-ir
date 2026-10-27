@@ -57,10 +57,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Panasonic Daylight View",
+        "title": "Управление Panasonic",
         "description": "Используется управление командами Panasonic на том же проекторе, отдельно от PJLink. Включите NETWORK CONTROL в меню проектора. Пароль — от веб-доступа администратора (по умолчанию пароль PJLink); имя пользователя обычно admin1. Пустой пароль подходит только для подключения без авторизации. Изменения перезагрузят интеграцию без повторного обучения ИК.",
         "data": {
-          "panasonic_enabled": "Управлять Daylight View",
+          "panasonic_enabled": "Дополнительное управление Panasonic",
           "panasonic_port": "Порт команд Panasonic",
           "panasonic_username": "Имя администратора веб-интерфейса",
           "panasonic_password": "Пароль администратора веб-интерфейса"
@@ -68,7 +68,7 @@
       }
     },
     "abort": {
-      "daylight_not_supported": "Управление Daylight View сейчас поддерживается только для Panasonic FW300."
+      "daylight_not_supported": "Дополнительное управление Panasonic сейчас поддерживается только для FW300."
     }
   },
   "selector": {
@@ -88,6 +88,47 @@
           "auto": "Авто",
           "on": "Включено"
         }
+      },
+      "picture_mode": {
+        "name": "Режим изображения",
+        "state": {
+          "dynamic": "Динамический",
+          "standard": "Стандартный",
+          "natural": "Натуральный",
+          "cinema": "Кино",
+          "blackboard": "Школьная доска"
+        }
+      },
+      "color_temperature": {
+        "name": "Цветовая температура",
+        "state": {
+          "low": "Низкая",
+          "default": "Стандартная",
+          "high": "Высокая"
+        }
+      },
+      "aspect": {
+        "name": "Формат изображения",
+        "state": {
+          "auto": "Авто",
+          "4_3": "4:3",
+          "16_9": "16:9",
+          "h_fit": "По ширине",
+          "v_fit": "По высоте",
+          "hv_fit": "Заполнить экран",
+          "through": "Без масштабирования"
+        }
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Громкость"
+      },
+      "brightness": {
+        "name": "Яркость"
+      },
+      "contrast": {
+        "name": "Контраст"
       }
     },
     "binary_sensor": {
@@ -105,6 +146,24 @@
       }
     },
     "sensor": {
+      "intake_temperature": {
+        "name": "Температура входящего воздуха"
+      },
+      "exhaust_temperature": {
+        "name": "Температура выходящего воздуха"
+      },
+      "filter_hours": {
+        "name": "Наработка фильтра"
+      },
+      "filter_rewinds": {
+        "name": "Перемотки фильтра"
+      },
+      "filter_since_rewind": {
+        "name": "Время после перемотки фильтра"
+      },
+      "filter_remaining": {
+        "name": "Расчётный остаток фильтра"
+      },
       "lamp_hours": {
         "name": "Наработка лампы"
       },
@@ -172,11 +231,23 @@
     "switch": {
       "av_mute": {
         "name": "AV Mute"
+      },
+      "freeze": {
+        "name": "Стоп-кадр"
       }
     },
     "button": {
       "refresh": {
         "name": "Обновить данные"
+      },
+      "auto_setup": {
+        "name": "Автонастройка изображения"
+      },
+      "zoom_in": {
+        "name": "Увеличить изображение"
+      },
+      "zoom_out": {
+        "name": "Уменьшить изображение"
       }
     }
   }
