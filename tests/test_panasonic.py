@@ -168,6 +168,21 @@ class PanasonicTCPTests(unittest.IsolatedAsyncioTestCase):
                 await self.client.control(key, value)
         self.assertEqual(self.requests, [])
 
+    async def test_side_by_side_documented_callback_variants(self):
+        for reply in (b"00ODW\r", b"00OD1\r"):
+            self.reply = reply
+            await self.client.control("side_by_side")
+        self.assertEqual(self.requests, [b"00ODW\r", b"00ODW\r"])
+
+    async def test_side_by_side_wrong_ack_and_lost_response_not_repeated(self):
+        for response in (b"00OAS\r", None):
+            self.reply = response
+            before = len(self.requests)
+            with self.assertRaises(module.PJLinkError):
+                await self.client.control("side_by_side")
+            self.assertEqual(len(self.requests), before + 1)
+            self.assertEqual(self.requests[-1], b"00ODW\r")
+
     async def test_invalid_mode_before_connection(self):
         with self.assertRaises(ValueError):
             await self.client.daylight("on\rPON")

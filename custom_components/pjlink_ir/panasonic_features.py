@@ -23,7 +23,7 @@ SENSORS = {
     "filter_since_rewind": "QFI:4",
     "filter_remaining": "QFI:5",
 }
-BUTTONS = {"auto_setup": "OAS", "zoom_in": "DZU", "zoom_out": "DZD"}
+BUTTONS = {"auto_setup": "OAS", "zoom_in": "DZU", "zoom_out": "DZD", "side_by_side": "ODW"}
 QUERIES = {**SENSORS, **{key: value[0] for key, value in NUMBERS.items()},
            **{key: value[0] for key, value in SELECTS.items()}, "freeze": "QFZ"}
 

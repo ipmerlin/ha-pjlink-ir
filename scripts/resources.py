@@ -21,7 +21,7 @@ def make(ru=False):
         "wake_timeout": t("Wait for power confirmation (seconds)", "Ожидание подтверждения включения (секунды)"),
     }
     return {
-        "title": "PJLink with IR Wake",
+        "title": "Panasonic Projector",
         "config": {
             "step": {
                 "user": {
@@ -203,6 +203,7 @@ def make(ru=False):
                 "auto_setup": {"name": t("Auto setup", "Автонастройка изображения")},
                 "zoom_in": {"name": t("Digital zoom in", "Увеличить изображение")},
                 "zoom_out": {"name": t("Digital zoom out", "Уменьшить изображение")},
+                "side_by_side": {"name": t("Side by Side", "Два изображения рядом")},
             },
         },
     }

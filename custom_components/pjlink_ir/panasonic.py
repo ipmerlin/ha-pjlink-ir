@@ -56,7 +56,9 @@ class PanasonicClient:
         command = control_command(key, value)
         result = await self._transaction(command)
         # No blind repeats, including non-idempotent zoom buttons.
-        if result != command:
+        # FW300 p.21 prints ODW in the hex callback and OD1 in the ASCII row.
+        accepted = {"ODW", "OD1"} if key == "side_by_side" else {command}
+        if result not in accepted:
             raise PJLinkError(f"Panasonic {command.split(':')[0]}: missing acknowledgement")
 
     async def daylight(self, mode=None):

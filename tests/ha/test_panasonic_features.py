@@ -71,7 +71,7 @@ async def test_sensor_values_units_controls_and_one_device(hass, controls):
     assert hass.states.get("select.cinema_picture_mode").state == "cinema"
     assert hass.states.get("switch.cinema_freeze").state == "off"
     entities = er.async_entries_for_config_entry(er.async_get(hass), controls.entry.entry_id)
-    assert len(entities) == 31
+    assert len(entities) == 32
     assert len({entity.device_id for entity in entities}) == 1
 
 
@@ -87,6 +87,7 @@ async def test_sensor_values_units_controls_and_one_device(hass, controls):
     ("button", "press", "auto_setup", {}, "auto_setup", None),
     ("button", "press", "digital_zoom_in", {}, "zoom_in", None),
     ("button", "press", "digital_zoom_out", {}, "zoom_out", None),
+    ("button", "press", "side_by_side", {}, "side_by_side", None),
 ])
 async def test_services_send_once_without_ir(hass, controls, domain, service, name, data, key, value):
     controls.sends.reset_mock()
@@ -166,7 +167,7 @@ async def test_uncertain_control_once_then_read_actual_state(hass, controls):
 async def test_diagnostics_include_values_but_not_credentials(hass, controls):
     report = await async_get_config_entry_diagnostics(hass, controls.entry)
     assert report["coordinator"]["state"]["panasonic"]["intake_temperature"] == 20
-    assert report["summary"]["registry_entities"] == 31
+    assert report["summary"]["registry_entities"] == 32
     assert report["source_sha256"]["number.py"]
     assert "PRIVATE_" not in str(report)
 

@@ -1,5 +1,5 @@
 {
-  "title": "PJLink with IR Wake",
+  "title": "Panasonic Projector",
   "config": {
     "step": {
       "user": {
@@ -248,6 +248,9 @@
       },
       "zoom_out": {
         "name": "Уменьшить изображение"
+      },
+      "side_by_side": {
+        "name": "Два изображения рядом"
       }
     }
   }

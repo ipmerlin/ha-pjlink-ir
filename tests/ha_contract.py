@@ -202,7 +202,7 @@ async def main(config_dir):
             assert hass.states.get(select_id).state == "auto"
             assert len(entity_registry.async_entries_for_config_entry(
                 entity_registry.async_get(hass), daylight_entry.entry_id
-            )) == 31
+            )) == 32
             assert hass.states.get("sensor.panasonic_intake_air_temperature").state == "20"
             assert hass.states.get("sensor.panasonic_estimated_filter_time_remaining").state == "1500"
             for domain, service, name, data, expected in (
@@ -216,6 +216,7 @@ async def main(config_dir):
                 await hass.async_block_till_done()
                 assert hass.states.get(entity_id).state == expected
             await hass.services.async_call("button", "press", {"entity_id": "button.panasonic_auto_setup"}, blocking=True)
+            await hass.services.async_call("button", "press", {"entity_id": "button.panasonic_side_by_side"}, blocking=True)
             print("PASS Panasonic temperatures, filter, number/select/switch/button service readback")
             await hass.services.async_call("select", "select_option", {
                 "entity_id": select_id, "option": "on",
