@@ -66,6 +66,90 @@
     "binary_sensor": {
       "connectivity": {
         "name": "Связь PJLink"
+      },
+      "lamp_lit": {
+        "name": "Лампа включена"
+      },
+      "additional_lamp_lit": {
+        "name": "Лампа {number} включена"
+      },
+      "problem": {
+        "name": "Неисправность"
+      }
+    },
+    "sensor": {
+      "lamp_hours": {
+        "name": "Наработка лампы"
+      },
+      "additional_lamp_hours": {
+        "name": "Наработка лампы {number}"
+      },
+      "power_phase": {
+        "name": "Фаза питания",
+        "state": {
+          "standby": "Ожидание",
+          "on": "Включён",
+          "cooling": "Охлаждение",
+          "warming": "Прогрев"
+        }
+      },
+      "fan_status": {
+        "name": "Состояние вентилятора",
+        "state": {
+          "ok": "Норма",
+          "warning": "Предупреждение",
+          "error": "Ошибка"
+        }
+      },
+      "lamp_status": {
+        "name": "Состояние лампы",
+        "state": {
+          "ok": "Норма",
+          "warning": "Предупреждение",
+          "error": "Ошибка"
+        }
+      },
+      "temperature_status": {
+        "name": "Состояние температуры",
+        "state": {
+          "ok": "Норма",
+          "warning": "Предупреждение",
+          "error": "Ошибка"
+        }
+      },
+      "cover_status": {
+        "name": "Состояние крышки",
+        "state": {
+          "ok": "Норма",
+          "warning": "Предупреждение",
+          "error": "Ошибка"
+        }
+      },
+      "filter_status": {
+        "name": "Состояние фильтра",
+        "state": {
+          "ok": "Норма",
+          "warning": "Предупреждение",
+          "error": "Ошибка"
+        }
+      },
+      "other_status": {
+        "name": "Прочие неисправности",
+        "state": {
+          "ok": "Норма",
+          "warning": "Предупреждение",
+          "error": "Ошибка"
+        }
+      }
+    },
+    "switch": {
+      "av_mute": {
+        "name": "AV Mute"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Обновить данные"
       }
     }
   }

@@ -25,6 +25,10 @@ def _source_files():
         "entity.py",
         "media_player.py",
         "binary_sensor.py",
+        "sensor.py",
+        "switch.py",
+        "button.py",
+        "protocol.py",
         "manifest.json",
     )
     result = {}
@@ -111,11 +115,24 @@ async def async_get_config_entry_diagnostics(hass, entry):
         "platforms": platforms,
         "coordinator": {
             "last_update_success": getattr(coordinator, "last_update_success", None),
-            "state": {key: state_data.get(key) for key in ("connected", "power", "source", "muted", "inputs")},
+            "state": {
+                key: state_data.get(key)
+                for key in (
+                    "connected",
+                    "power",
+                    "source",
+                    "muted",
+                    "video_muted",
+                    "inputs",
+                    "lamps",
+                    "errors",
+                    "query_errors",
+                )
+            },
         },
         "loaded_modules": {
             name: f"custom_components.{DOMAIN}.{name}" in sys.modules
-            for name in ("media_player", "binary_sensor", "coordinator", "client")
+            for name in ("media_player", "binary_sensor", "sensor", "switch", "button", "coordinator", "client")
         },
         "source_sha256": await hass.async_add_executor_job(_source_files),
     }

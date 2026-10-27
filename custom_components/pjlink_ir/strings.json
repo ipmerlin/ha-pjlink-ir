@@ -66,6 +66,90 @@
     "binary_sensor": {
       "connectivity": {
         "name": "PJLink connection"
+      },
+      "lamp_lit": {
+        "name": "Lamp lit"
+      },
+      "additional_lamp_lit": {
+        "name": "Lamp {number} lit"
+      },
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "sensor": {
+      "lamp_hours": {
+        "name": "Lamp operating time"
+      },
+      "additional_lamp_hours": {
+        "name": "Lamp {number} operating time"
+      },
+      "power_phase": {
+        "name": "Power phase",
+        "state": {
+          "standby": "Standby",
+          "on": "On",
+          "cooling": "Cooling down",
+          "warming": "Warming up"
+        }
+      },
+      "fan_status": {
+        "name": "Fan status",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "error": "Error"
+        }
+      },
+      "lamp_status": {
+        "name": "Lamp status",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "error": "Error"
+        }
+      },
+      "temperature_status": {
+        "name": "Temperature status",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "error": "Error"
+        }
+      },
+      "cover_status": {
+        "name": "Cover status",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "error": "Error"
+        }
+      },
+      "filter_status": {
+        "name": "Filter status",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "error": "Error"
+        }
+      },
+      "other_status": {
+        "name": "Other status",
+        "state": {
+          "ok": "OK",
+          "warning": "Warning",
+          "error": "Error"
+        }
+      }
+    },
+    "switch": {
+      "av_mute": {
+        "name": "AV mute"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh status"
       }
     }
   }

@@ -67,6 +67,12 @@ class TCPTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self.client.power(), "1")
         self.assertEqual(self.requests, [b"%1POWR ?\r"])
 
+    async def test_lamp_and_error_queries_over_tcp(self):
+        self.replies = {"LAMP": b"%1LAMP=4567 1\r", "ERST": b"%1ERST=001000\r"}
+        self.assertEqual(await self.client.command("LAMP"), "4567 1")
+        self.assertEqual(await self.client.command("ERST"), "001000")
+        self.assertEqual(self.requests, [b"%1LAMP ?\r", b"%1ERST ?\r"])
+
     async def test_identify_end_to_end(self):
         self.replies = {
             "POWR": b"%1POWR=1\r",

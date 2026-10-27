@@ -108,7 +108,47 @@ def make(ru=False):
                 }
             }
         },
-        "entity": {"binary_sensor": {"connectivity": {"name": t("PJLink connection", "Связь PJLink")}}},
+        "entity": {
+            "binary_sensor": {
+                "connectivity": {"name": t("PJLink connection", "Связь PJLink")},
+                "lamp_lit": {"name": t("Lamp lit", "Лампа включена")},
+                "additional_lamp_lit": {"name": t("Lamp {number} lit", "Лампа {number} включена")},
+                "problem": {"name": t("Problem", "Неисправность")},
+            },
+            "sensor": {
+                "lamp_hours": {"name": t("Lamp operating time", "Наработка лампы")},
+                "additional_lamp_hours": {"name": t("Lamp {number} operating time", "Наработка лампы {number}")},
+                "power_phase": {
+                    "name": t("Power phase", "Фаза питания"),
+                    "state": {
+                        "standby": t("Standby", "Ожидание"),
+                        "on": t("On", "Включён"),
+                        "cooling": t("Cooling down", "Охлаждение"),
+                        "warming": t("Warming up", "Прогрев"),
+                    },
+                },
+                **{
+                    f"{key}_status": {
+                        "name": t(en, russian),
+                        "state": {
+                            "ok": t("OK", "Норма"),
+                            "warning": t("Warning", "Предупреждение"),
+                            "error": t("Error", "Ошибка"),
+                        },
+                    }
+                    for key, en, russian in (
+                        ("fan", "Fan status", "Состояние вентилятора"),
+                        ("lamp", "Lamp status", "Состояние лампы"),
+                        ("temperature", "Temperature status", "Состояние температуры"),
+                        ("cover", "Cover status", "Состояние крышки"),
+                        ("filter", "Filter status", "Состояние фильтра"),
+                        ("other", "Other status", "Прочие неисправности"),
+                    )
+                },
+            },
+            "switch": {"av_mute": {"name": t("AV mute", "AV Mute")}},
+            "button": {"refresh": {"name": t("Refresh status", "Обновить данные")}},
+        },
     }
 
 

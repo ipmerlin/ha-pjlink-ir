@@ -4,7 +4,7 @@ from homeassistant.const import Platform
 
 from .coordinator import ProjectorCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
 
 
 async def async_setup_entry(hass, entry):

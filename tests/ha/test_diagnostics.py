@@ -34,12 +34,15 @@ async def test_diagnostics_reports_linked_entities_without_network_or_secrets(ha
     entry = await create_entry(hass)
     entry.runtime_data.client.command = AsyncMock(side_effect=AssertionError("Diagnostics must not send commands"))
     report = await async_get_config_entry_diagnostics(hass, entry)
-    assert report["summary"] == {"registry_entities": 2, "active_entities": 2, "disabled_entities": 0, "devices": 1}
+    assert report["summary"] == {"registry_entities": 14, "active_entities": 14, "disabled_entities": 0, "devices": 1}
     assert report["findings"] == []
     assert all(entity["linked_to_entry_device"] for entity in report["registry_entities"])
     assert {platform["domain"] for platform in report["platforms"] if platform["belongs_to_entry"]} == {
         "media_player",
         "binary_sensor",
+        "sensor",
+        "switch",
+        "button",
     }
     assert report["source_sha256"]["media_player.py"]
     serialized = json.dumps(report)
@@ -51,9 +54,9 @@ async def test_diagnostics_reports_linked_entities_without_network_or_secrets(ha
 async def test_diagnostics_distinguishes_disabled_entities(hass):
     entry = await create_entry(hass, disable_new=True)
     report = await async_get_config_entry_diagnostics(hass, entry)
-    assert report["summary"]["registry_entities"] == 2
+    assert report["summary"]["registry_entities"] == 14
     assert report["summary"]["active_entities"] == 0
-    assert report["summary"]["disabled_entities"] == 2
+    assert report["summary"]["disabled_entities"] == 14
     assert "all_entities_disabled" in report["findings"]
 
 

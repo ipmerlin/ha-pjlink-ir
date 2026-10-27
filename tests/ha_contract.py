@@ -62,22 +62,25 @@ async def main(config_dir):
         player_id = players[0]
         assert hass.states.get(player_id).state == "unknown"
         assert hass.states.get(player_id).attributes["assumed_state"]
-        assert len(hass.states.async_entity_ids("binary_sensor")) == 1
+        assert len(hass.states.async_entity_ids("binary_sensor")) == 3
         print("PASS sleeping startup, media player and connectivity sensor")
         diagnostics = await async_get_config_entry_diagnostics(hass, entry)
         assert diagnostics["summary"] == {
-            "registry_entities": 2,
-            "active_entities": 2,
+            "registry_entities": 14,
+            "active_entities": 14,
             "disabled_entities": 0,
             "devices": 1,
         }
         assert diagnostics["findings"] == []
-        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 2
-        print("PASS read-only diagnostics: two entities linked to one device")
+        assert len([platform for platform in diagnostics["platforms"] if platform["belongs_to_entry"]]) == 5
+        print("PASS read-only diagnostics: 14 entities linked to one device across five platforms")
         hass.states.async_set("remote.contract", "on", {"supported_features": 1})
         send = AsyncMock()
         hass.services.async_register("remote", "send_command", send)
         entry.runtime_data.client.power = AsyncMock(side_effect=[ConnectionUnavailable(), "3", "3"])
+        entry.runtime_data.client.command = AsyncMock(
+            side_effect=lambda name, value="?": {"LAMP": "1200 1", "ERST": "000000"}[name]
+        )
         entry.runtime_data.wake.interval = 0
         await hass.services.async_call("media_player", "turn_on", {"entity_id": player_id}, blocking=True)
         assert send.await_count == 1

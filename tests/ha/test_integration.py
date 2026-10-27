@@ -51,6 +51,9 @@ async def test_sleeping_entity_can_send_generic_ir(hass):
     hass.services.async_register("remote", "send_command", send)
     coordinator = entry.runtime_data
     coordinator.client.power = AsyncMock(side_effect=[ConnectionUnavailable(), "3", "3"])
+    coordinator.client.command = AsyncMock(
+        side_effect=lambda name, value="?": {"LAMP": "1200 1", "ERST": "000000"}[name]
+    )
     coordinator.wake.interval = 0
     await hass.services.async_call("media_player", "turn_on", {"entity_id": "media_player.cinema"}, blocking=True)
     assert send.await_count == 1

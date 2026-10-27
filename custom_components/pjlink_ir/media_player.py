@@ -87,13 +87,7 @@ class PJLinkMediaPlayer(ProjectorEntity, MediaPlayerEntity):
             await self.coordinator.async_request_refresh()
 
     async def _command(self, command, value):
-        try:
-            async with self.coordinator.wake.lock:
-                await self.coordinator.client.command(command, value)
-        except PJLinkError as err:
-            raise HomeAssistantError(str(err)) from err
-        finally:
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.async_command(command, value)
 
     async def async_turn_off(self):
         await self._command("POWR", "0")
