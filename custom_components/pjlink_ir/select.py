@@ -15,7 +15,6 @@ class DaylightView(ProjectorDataEntity, SelectEntity):
     _data_key = "daylight_view"
     _attr_translation_key = "daylight_view"
     _attr_icon = "mdi:theme-light-dark"
-    _attr_options = list(MODES)
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
@@ -24,6 +23,10 @@ class DaylightView(ProjectorDataEntity, SelectEntity):
     @property
     def current_option(self):
         return (self.coordinator.data or {}).get("daylight_view")
+
+    @property
+    def options(self):
+        return ["off", "on"] if self.coordinator.panasonic.rear else list(MODES)
 
     async def async_select_option(self, option):
         await self.coordinator.async_daylight(option)

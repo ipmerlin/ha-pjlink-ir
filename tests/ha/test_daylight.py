@@ -77,6 +77,17 @@ async def test_failure_isolated_and_recovers(hass, daylight):
     assert hass.states.get("select.cinema_daylight_view").state == "auto"
 
 
+async def test_rear_projection_exposes_only_valid_options(hass, daylight):
+    entry, values, current, panasonic = daylight
+    entry.runtime_data.panasonic.rear = True
+    current["mode"] = "on"
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    state = hass.states.get("select.cinema_daylight_view")
+    assert state.state == "on"
+    assert state.attributes["options"] == ["off", "on"]
+
+
 @pytest.mark.parametrize("power", ["0", "2", "3"])
 async def test_no_panasonic_query_or_control_during_transitions(hass, daylight, power):
     entry, values, current, panasonic = daylight

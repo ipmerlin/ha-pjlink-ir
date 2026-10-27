@@ -19,6 +19,7 @@ class PanasonicTCPTests(unittest.IsolatedAsyncioTestCase):
         self.greeting = b"NTCONTROL 0\r"
         self.reply = b"00+00001\r"
         self.requests = []
+        self.installation = b"0"
         self.handlers = set()
 
         async def handle(reader, writer):
@@ -27,7 +28,12 @@ class PanasonicTCPTests(unittest.IsolatedAsyncioTestCase):
             try:
                 writer.write(self.greeting)
                 await writer.drain()
-                self.requests.append(await reader.readuntil(b"\r"))
+                request = await reader.readuntil(b"\r")
+                self.requests.append(request)
+                if request.endswith(b"00QSP\r"):
+                    writer.write(b"00" + self.installation + b"\r")
+                    await writer.drain()
+                    return
                 if self.reply is None:
                     await reader.read()
                 else:
@@ -42,6 +48,7 @@ class PanasonicTCPTests(unittest.IsolatedAsyncioTestCase):
 
         self.server = await asyncio.start_server(handle, "127.0.0.1", 0)
         self.client = module.PanasonicClient("127.0.0.1", self.server.sockets[0].getsockname()[1], timeout=0.2)
+        self.client.interval = 0
 
     async def asyncTearDown(self):
         self.server.close()
@@ -51,15 +58,32 @@ class PanasonicTCPTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_query_and_three_modes(self):
         for mode, value in module.MODES.items():
-            self.reply = f"00{value}\r".encode()
+            self.reply = f"00DLVI0={value}\r".encode()
             self.assertEqual(await self.client.daylight(), mode)
             self.reply = f"00VXX:DLVI0={value}\r".encode()
             self.assertEqual(await self.client.daylight(mode), mode)
         self.assertEqual(self.requests, [
-            b"00QVX:DLVI0\r", b"00VXX:DLVI0=+00000\r",
-            b"00QVX:DLVI0\r", b"00VXX:DLVI0=+00001\r",
-            b"00QVX:DLVI0\r", b"00VXX:DLVI0=+00002\r",
+            b"00QSP\r", b"00QVX:DLVI0\r", b"00VXX:DLVI0=+00000\r",
+            b"00QSP\r", b"00QVX:DLVI0\r", b"00VXX:DLVI0=+00001\r",
+            b"00QSP\r", b"00QVX:DLVI0\r", b"00VXX:DLVI0=+00002\r",
         ])
+
+    async def test_rear_projection_has_no_auto_and_different_on_value(self):
+        self.installation = b"3"
+        self.reply = b"00DLVI0=+00001\r"
+        self.assertEqual(await self.client.daylight(), "on")
+        self.assertTrue(self.client.rear)
+        with self.assertRaises(module.PJLinkError):
+            await self.client.daylight("auto")
+        self.reply = b"00VXX:DLVI0=+00001\r"
+        self.assertEqual(await self.client.daylight("on"), "on")
+        self.assertEqual(self.requests[-1], b"00VXX:DLVI0=+00001\r")
+
+    async def test_bad_projection_method_does_not_guess_mapping(self):
+        self.installation = b"9"
+        with self.assertRaises(module.PJLinkError):
+            await self.client.daylight()
+        self.assertEqual(self.requests, [b"00QSP\r"])
 
     async def test_protect_mode_hash_and_fresh_challenge(self):
         self.client.username, self.client.password = "admin1", "test-password"
